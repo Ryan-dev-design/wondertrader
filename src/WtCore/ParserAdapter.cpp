@@ -241,9 +241,6 @@ void ParserAdapter::handleQuote(WTSTickData *quote, uint32_t procFlag)
 	if (quote == NULL || _stopped || quote->actiondate() == 0 || quote->tradingdate() == 0)
 		return;
 
-	if (!_filters.empty() && (_filters.find(quote->exchg()) == _filters.end()))
-		return;
-
 	WTSContractInfo* cInfo = quote->getContractInfo();
 	if (cInfo == NULL)
 	{
@@ -253,6 +250,19 @@ void ParserAdapter::handleQuote(WTSTickData *quote, uint32_t procFlag)
 
 	if (cInfo == NULL)
 		return;
+
+	if (!_filters.empty())
+	{
+		bool matched = (_filters.find(quote->exchg()) != _filters.end()
+			|| _filters.find(quote->code()) != _filters.end()
+			|| _filters.find(cInfo->getCode()) != _filters.end()
+			|| _filters.find(cInfo->getFullCode()) != _filters.end()
+			|| _filters.find(cInfo->getFullPid()) != _filters.end()
+			|| _filters.find(cInfo->getAltCode()) != _filters.end()
+			|| _filters.find(cInfo->getFullAltCode()) != _filters.end());
+		if (!matched)
+			return;
+	}
 
 	WTSCommodityInfo* commInfo = cInfo->getCommInfo();
 	WTSSessionInfo* sInfo = commInfo->getSessionInfo();
